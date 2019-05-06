@@ -77,6 +77,7 @@ void appMain(gecko_configuration_t *pconfig)
 
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
+        gecko_cmd_hardware_set_soft_timer(32768, 0, 0);
         break;
 
       case gecko_evt_le_connection_opened_id:
@@ -104,23 +105,29 @@ void appMain(gecko_configuration_t *pconfig)
 
       /* Check if the user-type OTA Control Characteristic was written.
        * If ota_control was written, boot the device into Device Firmware Upgrade (DFU) mode. */
-      case gecko_evt_gatt_server_user_write_request_id:
+		case gecko_evt_gatt_server_user_write_request_id:
 
-        if (evt->data.evt_gatt_server_user_write_request.characteristic == gattdb_ota_control) {
-          /* Set flag to enter to OTA mode */
-          boot_to_dfu = 1;
-          /* Send response to Write Request */
-          gecko_cmd_gatt_server_send_user_write_response(
-            evt->data.evt_gatt_server_user_write_request.connection,
-            gattdb_ota_control,
-            bg_err_success);
+			if (evt->data.evt_gatt_server_user_write_request.characteristic
+					== gattdb_ota_control) {
+				/* Set flag to enter to OTA mode */
+				boot_to_dfu = 1;
+				/* Send response to Write Request */
+				gecko_cmd_gatt_server_send_user_write_response(
+						evt->data.evt_gatt_server_user_write_request.connection,
+						gattdb_ota_control, bg_err_success);
 
-          /* Close connection to enter to DFU OTA mode */
-          gecko_cmd_le_connection_close(evt->data.evt_gatt_server_user_write_request.connection);
-        }
-        break;
+				/* Close connection to enter to DFU OTA mode */
+				gecko_cmd_le_connection_close(
+						evt->data.evt_gatt_server_user_write_request.connection);
+			}
+			break;
 
-      /* Add additional event handlers as your application requires */
+			/* Add additional event handlers as your application requires */
+		case gecko_evt_hardware_soft_timer_id:
+			/* Measure the temperature as defined in the function temperatureMeasure() */
+			//temperatureMeasure();
+			printf("Hello\n");
+			break;
 
       default:
         break;

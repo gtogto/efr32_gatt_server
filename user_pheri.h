@@ -24,6 +24,6 @@
 #define VCOM_EN_PORT	gpioPortA
 #define VCOM_EN_PIN		5
 
-int _write(int file, char *ptr, int len);
+//int _write(int file, char *ptr, int len);
 void init_vcom(void);
 #endif /* USER_PHERI_H_ */

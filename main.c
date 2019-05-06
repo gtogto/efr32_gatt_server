@@ -109,15 +109,18 @@ int main(void)
   // User Init
   //init_vcom();
   RETARGET_SerialInit();
-
+  RETARGET_SerialCrLf(true);
+  printf("hello1\n");
   /* Initialize application */
   initApp();
-
+  printf("hello2\n");
 
   /* Start application */
   appMain(&config);
+  printf("hello3\n");
 
-  gecko_cmd_hardware_set_soft_timer(32768, 0, 0);
+
+
 
   while (1) {
       /* Event pointer for handling events */
