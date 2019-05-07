@@ -110,14 +110,14 @@ int main(void)
   //init_vcom();
   RETARGET_SerialInit();
   RETARGET_SerialCrLf(true);
-  printf("hello1\n");
-  /* Initialize application */
+   /* Initialize application */
   initApp();
-  printf("hello2\n");
 
   /* Start application */
+  init_pb();
   appMain(&config);
-  printf("hello3\n");
+
+  /* Never Reach */
 
 
 

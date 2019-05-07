@@ -7,7 +7,9 @@
 #include "em_cmu.h"
 #include "em_usart.h"
 #include "user_pheri.h"
-
+#include "gpiointerrupt.h"
+#include "key_input.h"
+uint8_t gKeyValue = KEYBOARD_NONE;
 #if 0
 int _write(int file, char *ptr, int len)
 {
@@ -81,3 +83,41 @@ void init_vcom(void)
 
 }
 #endif
+
+void init_pb(void)
+{
+	GPIO_PinModeSet(UIF_LED0_PORT, UIF_LED0_PIN, gpioModePushPull, 0);
+	GPIO_PinModeSet(UIF_LED1_PORT, UIF_LED1_PIN, gpioModePushPull, 0);
+
+	/* GPIO Driver Init */
+	GPIOINT_Init();
+
+	GPIO_PinModeSet(UIF_PB0_PORT, UIF_PB0_PIN, gpioModeInputPull, 1);
+	/* Register Falling Edge */
+	GPIOINT_CallbackRegister(UIF_PB0_PIN, isr_pb0);
+	GPIO_IntConfig(UIF_PB0_PORT, UIF_PB0_PIN, false, true, true); //falling edge
+
+	GPIO_PinModeSet(UIF_PB1_PORT, UIF_PB1_PIN, gpioModeInputPull, 1);
+	/* Register Falling Edge */
+	GPIOINT_CallbackRegister(UIF_PB1_PIN, isr_pb1);
+	GPIO_IntConfig(UIF_PB1_PORT, UIF_PB1_PIN, false, true, true); //falling edge
+}
+
+void isr_pb0(uint8_t pin)
+{
+	gKeyValue = KEYBOARD_RIGHT;
+	GPIO_PinOutToggle(UIF_LED0_PORT, UIF_LED0_PIN);
+}
+
+void isr_pb1(uint8_t pin)
+{
+	gKeyValue = KEYBOARD_LEFT;
+	GPIO_PinOutToggle(UIF_LED1_PORT, UIF_LED1_PIN);
+}
+
+uint8_t get_key_value()
+{
+	uint8_t tmpKey = gKeyValue;
+	gKeyValue = KEYBOARD_NONE;
+	return tmpKey;
+}

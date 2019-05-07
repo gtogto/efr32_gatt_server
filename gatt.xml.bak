@@ -9,14 +9,14 @@
     <!--Device Name-->
     <characteristic id="device_name" name="Device Name" sourceId="org.bluetooth.characteristic.gap.device_name" uuid="2A00">
       <informativeText/>
-      <value length="13" type="utf-8" variable_length="false">Empty Example</value>
+      <value length="12" type="utf-8" variable_length="false">BLE Keyboard</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
     <!--Appearance-->
     <characteristic name="Appearance" sourceId="org.bluetooth.characteristic.gap.appearance" uuid="2A01">
       <informativeText>Abstract: The external appearance of this device. The values are composed of a category (10-bits) and sub-categories (6-bits). </informativeText>
-      <value length="2" type="hex" variable_length="false">0000</value>
+      <value length="2" type="hex" variable_length="false">c103</value>
       <properties const="true" const_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
   </service>
@@ -28,7 +28,7 @@
     <!--Manufacturer Name String-->
     <characteristic name="Manufacturer Name String" sourceId="org.bluetooth.characteristic.manufacturer_name_string" uuid="2A29">
       <informativeText>Abstract: The value of this characteristic is a UTF-8 string representing the name of the manufacturer of the device. </informativeText>
-      <value length="12" type="utf-8" variable_length="false">Silicon Labs</value>
+      <value length="8" type="utf-8" variable_length="false">APOSTECH</value>
       <properties const="true" const_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
     
@@ -37,6 +37,13 @@
       <informativeText>Abstract: The value of this characteristic is a UTF-8 string representing the model number assigned by the device vendor. </informativeText>
       <value length="10" type="utf-8" variable_length="false">Blue Gecko</value>
       <properties const="true" const_requirement="optional" read="true" read_requirement="optional"/>
+    </characteristic>
+    
+    <!--PnP ID-->
+    <characteristic id="pnp_id" name="PnP ID" sourceId="org.bluetooth.characteristic.pnp_id" uuid="2A50">
+      <informativeText>Abstract:  The PnP_ID characteristic returns its value when read using the GATT Characteristic Value Read procedure.  Summary:  The PnP_ID characteristic is a set of values that used to create a device ID value that is unique for this device.  Included in the characteristic is a Vendor ID Source field, a Vendor ID field, a Product ID field and a Product Version field.  These values are used to identify all devices of a given type/model/version using numbers.  </informativeText>
+      <value length="7" type="hex" variable_length="false">014700ffffffff</value>
+      <properties const="true" const_requirement="optional" read="true" read_requirement="mandatory"/>
     </characteristic>
     
     <!--System ID-->
@@ -56,6 +63,105 @@
       <informativeText>Abstract: Silicon Labs OTA Control. </informativeText>
       <value length="1" type="user" variable_length="false"/>
       <properties write="true" write_requirement="optional"/>
+    </characteristic>
+  </service>
+  
+  <!--Battery Service-->
+  <service advertise="false" id="battery_service" name="Battery Service" requirement="mandatory" sourceId="org.bluetooth.service.battery_service" type="secondary" uuid="180F">
+    <informativeText>Abstract:  The Battery Service exposes the state of a battery within a device.  Summary:  The Battery Service exposes the Battery State and Battery Level of a single battery or set of batteries in a device.  </informativeText>
+    
+    <!--Battery Level-->
+    <characteristic id="battery_level" name="Battery Level" sourceId="org.bluetooth.characteristic.battery_level" uuid="2A19">
+      <informativeText>Abstract:  The current charge level of a battery. 100% represents fully charged while 0% represents fully discharged.  </informativeText>
+      <value length="1" type="hex" variable_length="false">32</value>
+      <properties indicate="false" indicate_requirement="excluded" notify="false" notify_requirement="optional" read="true" read_requirement="mandatory" reliable_write="false" reliable_write_requirement="excluded" write="false" write_no_response="false" write_no_response_requirement="excluded" write_requirement="excluded"/>
+    </characteristic>
+  </service>
+  
+  <!--Human Interface Device-->
+  <service advertise="false" id="human_interface_device" name="Human Interface Device" requirement="mandatory" sourceId="org.bluetooth.service.human_interface_device" type="primary" uuid="1812">
+    <informativeText>Abstract:  This service exposes the HID reports and other HID data intended for HID Hosts and HID Devices.  Summary:  The HID Service exposes characteristics required for a HID Device to transfer HID report descriptors and reports to a HID Host. This also exposes the characteristics for a HID Host to write to a Device. The Human Interface Device Service is instantiated as a Primary Service.  </informativeText>
+    <include id="battery_service"/>
+    
+    <!--Protocol Mode-->
+    <characteristic id="protocol_mode" name="Protocol Mode" sourceId="org.bluetooth.characteristic.protocol_mode" uuid="2A4E">
+      <informativeText>Summary:  The Protocol Mode characteristic is used to expose the current protocol mode of the HID Service with which it is associated, or to set the desired protocol mode of the HID Service.  </informativeText>
+      <value length="1" type="hex" variable_length="false">1</value>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" write_no_response="true" write_no_response_requirement="mandatory"/>
+    </characteristic>
+    
+    <!--report_hid_keyboard_in-->
+    <characteristic id="hid_keyboard_in" name="report_hid_keyboard_in" sourceId="org.bluetooth.characteristic.report" uuid="2A4D">
+      <informativeText>Abstract:  The Report characteristic is used to exchange data between a HID Device and a HID Host.  Summary:  The Report characteristic value contains Input Report, Output Report or Feature Report data to be transferred between the HID Device and HID Host.  </informativeText>
+      <value length="20" type="hex" variable_length="true"/>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" notify="true" notify_requirement="excluded"/>
+      
+      <!--Report Reference-->
+      <descriptor name="Report Reference" sourceId="org.bluetooth.descriptor.report_reference" uuid="2908">
+        <properties authenticated_read="true" authenticated_read_requirement="optional" const="true" const_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional"/>
+        <value length="2" type="hex" variable_length="false">0001</value>
+      </descriptor>
+    </characteristic>
+    
+    <!--report_hid_keyboard_out-->
+    <characteristic id="hid_keyboard_out" name="report_hid_keyboard_out" sourceId="org.bluetooth.characteristic.report" uuid="2A4D">
+      <informativeText>Abstract:  The Report characteristic is used to exchange data between a HID Device and a HID Host.  Summary:  The Report characteristic value contains Input Report, Output Report or Feature Report data to be transferred between the HID Device and HID Host.  </informativeText>
+      <value length="20" type="hex" variable_length="true"/>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" authenticated_write="true" authenticated_write_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" encrypted_write="true" encrypted_write_requirement="optional" write_no_response="true" write_no_response_requirement="optional"/>
+      
+      <!--Report Reference-->
+      <descriptor name="Report Reference" sourceId="org.bluetooth.descriptor.report_reference" uuid="2908">
+        <properties authenticated_read="true" authenticated_read_requirement="optional" const="true" const_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional"/>
+        <value length="2" type="hex" variable_length="false">0002</value>
+      </descriptor>
+    </characteristic>
+    
+    <!--report_hid_keyboard_feature-->
+    <characteristic id="hid_keyboard_feature" name="report_hid_keyboard_feature" sourceId="org.bluetooth.characteristic.report" uuid="2A4D">
+      <informativeText>Abstract:  The Report characteristic is used to exchange data between a HID Device and a HID Host.  Summary:  The Report characteristic value contains Input Report, Output Report or Feature Report data to be transferred between the HID Device and HID Host.  </informativeText>
+      <value length="20" type="hex" variable_length="true"/>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" authenticated_write="true" authenticated_write_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" encrypted_write="true" encrypted_write_requirement="optional"/>
+      
+      <!--Report Reference-->
+      <descriptor name="Report Reference" sourceId="org.bluetooth.descriptor.report_reference" uuid="2908">
+        <properties authenticated_read="true" authenticated_read_requirement="optional" const="true" const_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional"/>
+        <value length="2" type="hex" variable_length="false">0003</value>
+      </descriptor>
+    </characteristic>
+    
+    <!--Report Map-->
+    <characteristic name="Report Map" sourceId="org.bluetooth.characteristic.report_map" uuid="2A4B">
+      <informativeText>Summary:  The Report Map characteristic is used to define formatting information for Input Report, Output Report, and Feature Report data transferred between a HID Device and HID Host, information on how this data can be used, and other information regarding physical aspects of the device (i.e. that the device functions as a keyboard, for example, or has multiple functions such as a keyboard and volume controls).       Only a single instance of this characteristic exists as part of a HID Service.  </informativeText>
+      <value length="63" type="hex" variable_length="false">05010906A101050719E029E71500250175019508810295017508810195057501050819012905910295017503910195067508150025650507190029658100C0</value>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" const="true" const_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional"/>
+    </characteristic>
+    
+    <!--Boot Keyboard Input Report-->
+    <characteristic id="hid_boot_keyboard_in" name="Boot Keyboard Input Report" sourceId="org.bluetooth.characteristic.boot_keyboard_input_report" uuid="2A22">
+      <informativeText>Summary:  The Boot Keyboard Input Report characteristic is used to transfer fixed format and length Input Report data between a HID Host operating in Boot Protocol Mode and a HID Service corresponding to a boot keyboard.  </informativeText>
+      <value length="20" type="hex" variable_length="true"/>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" notify="true" notify_requirement="mandatory"/>
+    </characteristic>
+    
+    <!--Boot Keyboard Output Report-->
+    <characteristic id="hid_boot_keyboard_out" name="Boot Keyboard Output Report" sourceId="org.bluetooth.characteristic.boot_keyboard_output_report" uuid="2A32">
+      <informativeText>Summary:  The Boot Keyboard Output Report characteristic is used to transfer fixed format and length Output Report data between a HID Host operating in Boot Protocol Mode and a HID Service corresponding to a boot keyboard.  </informativeText>
+      <value length="20" type="hex" variable_length="true"/>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" authenticated_write="true" authenticated_write_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional" encrypted_write="true" encrypted_write_requirement="optional" write_no_response="true" write_no_response_requirement="mandatory"/>
+    </characteristic>
+    
+    <!--HID Information-->
+    <characteristic name="HID Information" sourceId="org.bluetooth.characteristic.hid_information" uuid="2A4A">
+      <informativeText>Abstract:  The HID Information Characteristic returns the HID attributes when read.  Summary:  The HID Information Characteristic contains the HID attributes.  The value of this Characteristic is static and can be cached for the lifetime of the bond between the HID device and the HID host.  </informativeText>
+      <value length="4" type="hex" variable_length="false">00010002</value>
+      <properties authenticated_read="true" authenticated_read_requirement="optional" const="true" const_requirement="optional" encrypted_read="true" encrypted_read_requirement="optional"/>
+    </characteristic>
+    
+    <!--HID Control Point-->
+    <characteristic id="hid_control_point" name="HID Control Point" sourceId="org.bluetooth.characteristic.hid_control_point" uuid="2A4C">
+      <informativeText>Summary:  The HID Control Point characteristic is a control-point attribute that defines the following HID Commands when written:             - Suspend ( Refer to Section 7.4.2, Bluetooth HID Profile Specification 1.0             - Exit Suspend (Refer to Section 7.4.2, Bluetooth HID Profile Specification 1.0  </informativeText>
+      <value length="1" type="hex" variable_length="false"/>
+      <properties write_no_response="true" write_no_response_requirement="mandatory"/>
     </characteristic>
   </service>
 </gatt>

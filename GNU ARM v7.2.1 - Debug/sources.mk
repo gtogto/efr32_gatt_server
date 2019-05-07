@@ -22,6 +22,7 @@ hardware/kit/common/bsp \
 hardware/kit/common/drivers \
 platform/Device/SiliconLabs/BGM1/Source/GCC \
 platform/Device/SiliconLabs/BGM1/Source \
+platform/emdrv/gpiointerrupt \
 platform/emdrv/sleep/src \
 platform/emdrv/tempdrv/src \
 platform/emlib/src \
