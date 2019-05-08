@@ -50,7 +50,7 @@ user_pheri.o: ../user_pheri.c \
  C:\work\EFM32\soc-empty\platform\emlib\inc/em_usart.h ../user_pheri.h \
  C:\work\EFM32\soc-empty\platform\emlib\inc/em_gpio.h \
  C:\work\EFM32\soc-empty\platform\emdrv\gpiointerrupt\inc/gpiointerrupt.h \
- ../key_input.h
+ ../user_code.h
 
 C:\work\EFM32\soc-empty\platform\emlib\inc/em_cmu.h:
 
@@ -156,4 +156,4 @@ C:\work\EFM32\soc-empty\platform\emlib\inc/em_gpio.h:
 
 C:\work\EFM32\soc-empty\platform\emdrv\gpiointerrupt\inc/gpiointerrupt.h:
 
-../key_input.h:
+../user_code.h:

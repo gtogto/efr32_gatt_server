@@ -26,12 +26,13 @@
 
 #include "app.h"
 #include "hid.h"
-#include "key_input.h"
+#include "user_pheri.h"
+#include "user_code.h"
 
+uint8_t activeConnectionId = 0xFF; /* Connection Handle ID */
 uint8_t key_buffer[8] = { 0, };
 uint8 ble_buffer[20];
 uint16_t hid_attribute = gattdb_hid_keyboard_in;
-uint8_t hid_connection = 0;
 
 /* Print boot message */
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
@@ -53,7 +54,6 @@ void appMain(gecko_configuration_t *pconfig)
 	gecko_init(pconfig);
 
 	while (1) {
-		/* Event pointer for handling events */
 		struct gecko_cmd_packet* evt;
 
 		/* if there are no events pending then the next call to gecko_wait_event() may cause
@@ -94,34 +94,21 @@ void appMain(gecko_configuration_t *pconfig)
 			gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable,
 					le_gap_undirected_connectable);
 
-			gecko_cmd_hardware_set_soft_timer(32768/2, 0, 0);
+			/* Set Timers */
+			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(10), TIMER_TICK, 0);
 			break;
 
 		case gecko_evt_le_connection_opened_id:
 			printLog("connection opened\r\n");
-#if 0
-		{
-			struct gecko_msg_le_connection_opened_evt_t *pEvtData;
-			struct gecko_msg_gatt_server_write_attribute_value_rsp_t *pRsp;
-
-
-
-#define HID_KEYBOARD_PROTOCOL_REPORT	0x01
-			ble_buffer[0] = HID_KEYBOARD_PROTOCOL_REPORT;
-			pRsp = gecko_cmd_gatt_server_write_attribute_value(gattdb_protocol_mode, 0, 1, ble_buffer);
-			printLog("gatt_server_write_attribute_value, result=%04x\n", pRsp->result);
-
-			/*	notify characteristic set to REPORT(keyboard_in) */
-			hid_attribute = gattdb_hid_keyboard_in;
-			/* encrypt message */
-			gecko_cmd_sm_increase_security(pEvtData->connection);
-		}
-#endif
+			/* Store the connection ID */
+			activeConnectionId = evt->data.evt_le_connection_opened.connection;
+			/* Set Timers */
+			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(20), TIMER_SENSOR, 0);
+			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(500), TIMER_KEY_INPUT, 0);
 			break;
 
 
 		case gecko_evt_le_connection_closed_id:
-		{
 			printLog("connection closed, reason: 0x%2.2x\r\n",
 					evt->data.evt_le_connection_closed.reason);
 
@@ -130,71 +117,48 @@ void appMain(gecko_configuration_t *pconfig)
 				/* Enter to OTA DFU mode */
 				gecko_cmd_system_reset(2);
 			} else {
-				/* Restart advertising after client has disconnected */
-//				gecko_cmd_sm_delete_bondings();
-//				gecko_cmd_le_gap_start_advertising(0,
-//						le_gap_general_discoverable,
-//						le_gap_undirected_connectable);
+				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(10), TIMER_TICK, 0);
+				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(20), TIMER_SENSOR, 0);
+				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(500), TIMER_KEY_INPUT, 0);
+				activeConnectionId = 0xFF; /* delete the connection ID */
 			}
-		}
 			break;
 
-		case gecko_evt_sm_passkey_display_id: {
-			struct gecko_msg_sm_passkey_display_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_passkey_display);
-			printLog(
-					"gecko_evt_sm_passkey_display_id, conn=%02x, passkey=%08x\n",
-					pEvtData->connection, pEvtData->passkey);
-		}
+		case gecko_evt_sm_passkey_display_id:
+			printLog("gecko_evt_sm_passkey_display_id, passkey=%08x\n",
+					evt->data.evt_sm_passkey_display.passkey);
 			break;
 
-		case gecko_evt_sm_confirm_passkey_id: {
-			struct gecko_msg_sm_confirm_passkey_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_confirm_passkey);
-			printLog(
-					"gecko_evt_sm_confirm_passkey_id, conn=%02x, passkey=%08x\n",
-					pEvtData->connection, pEvtData->passkey);
-			gecko_cmd_sm_passkey_confirm(pEvtData->connection, 1);
-		}
+		case gecko_evt_sm_confirm_passkey_id:
+			printLog( "gecko_evt_sm_confirm_passkey_id, passkey=%08x\n",
+					evt->data.evt_sm_confirm_passkey.passkey);
+			gecko_cmd_sm_passkey_confirm(evt->data.evt_sm_confirm_passkey.connection, 1);
+
 			break;
 
-			/* Test Code for bonding and SM events */
-		case gecko_evt_sm_bonded_id: {
-			struct gecko_msg_sm_bonded_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_bonded);
+		case gecko_evt_sm_bonded_id:
 			printLog("gecko_evt_sm_bonded_id, conn=%02x, bonding=%02x\n",
-					pEvtData->connection, pEvtData->bonding);
-			hid_connection = pEvtData->connection;
-		}
+					evt->data.evt_sm_bonded.connection, evt->data.evt_sm_bonded.bonding);
+			activeConnectionId = evt->data.evt_sm_bonded.connection;
 			break;
 
-		case gecko_evt_sm_bonding_failed_id: {
-			struct gecko_msg_sm_bonding_failed_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_bonding_failed);
-			printLog("gecko_evt_sm_bonding_failed_id, conn=%02x, reason=%04x\n",
-					pEvtData->connection, pEvtData->reason);
-		}
+		case gecko_evt_sm_bonding_failed_id:
+			printLog("gecko_evt_sm_bonding_failed_id, reason=%04x\n",
+					evt->data.evt_sm_bonding_failed.reason);
 			break;
 
-		case gecko_evt_sm_confirm_bonding_id: {
-			struct gecko_msg_sm_confirm_bonding_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_confirm_bonding);
-			printLog(
-					"gecko_evt_sm_confirm_bonding_id, conn=%02x, handle=%02x\n",
-					pEvtData->connection, pEvtData->bonding_handle);
-		}
+		case gecko_evt_sm_confirm_bonding_id:
+			gecko_cmd_sm_bonding_confirm(evt->data.evt_sm_confirm_bonding.connection, 1);
+			printLog("Confirm bonding\n");
 			break;
 
 		case gecko_evt_le_connection_parameters_id:
-		{
-			struct gecko_msg_le_connection_parameters_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_le_connection_parameters);
-			printLog(
-					"connection_params, connection=%02x, interval=%04x, latency=%04x, timeout=%04x, sm=%02x\n",
-					pEvtData->connection, pEvtData->interval, pEvtData->latency,
-					pEvtData->timeout, pEvtData->security_mode);
-			hid_connection = evt->data.evt_le_connection_parameters.connection;
-		}
+			printLog("connection_params, connection=%02x, interval=%04x, latency=%04x, timeout=%04x, sm=%02x\n",
+					evt->data.evt_le_connection_parameters.connection,
+					evt->data.evt_le_connection_parameters.interval,
+					evt->data.evt_le_connection_parameters.latency,
+					evt->data.evt_le_connection_parameters.timeout,
+					evt->data.evt_le_connection_parameters.security_mode);
 			break;
 
 		case gecko_rsp_gatt_server_write_attribute_value_id:
@@ -217,13 +181,10 @@ void appMain(gecko_configuration_t *pconfig)
 			break;
 
 		case gecko_evt_gatt_server_characteristic_status_id:
-		{
-			struct gecko_msg_gatt_server_characteristic_status_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_gatt_server_characteristic_status);
-			printLog(
-					"gecko_evt_gatt_server_characteristic_status_id, char=%04x, flag=%02x\n",
-					pEvtData->characteristic, pEvtData->status_flags);
-		}
+			printLog("gecko_evt_gatt_server_characteristic_status_id, char=%04x, flag=%02x\n",
+					evt->data.evt_gatt_server_characteristic_status.characteristic,
+					evt->data.evt_gatt_server_characteristic_status.status_flags);
+
 			switch (evt->data.evt_gatt_server_attribute_value.attribute) {
 			case gattdb_hid_keyboard_in:
 				hidKeyInCharStatusChange(
@@ -252,29 +213,20 @@ void appMain(gecko_configuration_t *pconfig)
 
 
 
-
 		case gecko_evt_sm_list_all_bondings_complete_id:
 			printLog("gecko_evt_sm_list_all_bondings_complete_id\n");
 			break;
 
-		case gecko_evt_sm_list_bonding_entry_id: {
-			struct gecko_msg_sm_list_bonding_entry_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_list_bonding_entry);
-			printLog(
-					"gecko_evt_sm_list_bonding_entry_id, bonding=%02x, address=%08x, addrtype=%02x\n",
-					pEvtData->bonding, pEvtData->address.addr,
-					pEvtData->address_type);
-		}
+		case gecko_evt_sm_list_bonding_entry_id:
+			printLog("gecko_evt_sm_list_bonding_entry_id, bonding=%02x, address=%08x, addrtype=%02x\n",
+					evt->data.evt_sm_list_bonding_entry.bonding,
+					evt->data.evt_sm_list_bonding_entry.address.addr,
+					evt->data.evt_sm_list_bonding_entry.address_type);
 			break;
 
-
-
-		case gecko_evt_sm_passkey_request_id: {
-			struct gecko_msg_sm_passkey_request_evt_t *pEvtData;
-			pEvtData = &(evt->data.evt_sm_passkey_request);
+		case gecko_evt_sm_passkey_request_id:
 			printLog("gecko_evt_sm_passkey_request_id, conn=%02x\n",
-					pEvtData->connection);
-		}
+					evt->data.evt_sm_passkey_request.connection);
 			break;
 
 			/* Events related to OTA upgrading
@@ -301,11 +253,19 @@ void appMain(gecko_configuration_t *pconfig)
 
 			/* Add additional event handlers as your application requires */
 		case gecko_evt_hardware_soft_timer_id:
-			/* Measure the temperature as defined in the function temperatureMeasure() */
-			//temperatureMeasure();
-			//printf("Hello\n");
-		{
-			struct gecko_msg_gatt_server_send_characteristic_notification_rsp_t * pRsp;
+			switch (evt->data.evt_hardware_soft_timer.handle) {
+			case TIMER_KEY_INPUT:
+				printf("KeyInput\n");
+				break;
+
+			case TIMER_SENSOR :
+				GPIO_PinOutToggle(UIF_LED0_PORT, UIF_LED0_PIN);
+				break;
+
+			case TIMER_TICK :
+				GPIO_PinOutToggle(UIF_LED1_PORT, UIF_LED1_PIN);
+				break;
+#if 0
 			uint8_t keyVal = KEYBOARD_NONE;
 			keyVal = get_key_value();
 			if (keyVal != KEYBOARD_NONE) {
@@ -320,11 +280,8 @@ void appMain(gecko_configuration_t *pconfig)
 						"gatt_server_send_characteristic_notification, result = %04x, keyValue=%02x\n",
 						pRsp->result, keyVal);
 			}
-#if 0
-			switch (evt->data.evt_hardware_soft_timer.handle) {
-				case KEY_INPUT_TIMER:
 #endif
-		}
+			}
 			break;
 
 		default:

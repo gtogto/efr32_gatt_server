@@ -68,7 +68,7 @@ app.o: ../app.c \
  ../app.h \
  C:\work\EFM32\soc-empty\hardware\kit\common\drivers/retargetserial.h \
  C:\work\EFM32\soc-empty\hardware\kit\common\halconfig/retargetserialhalconfig.h \
- ../hid.h ../key_input.h
+ ../hid.h ../user_pheri.h ../user_code.h
 
 C:\work\EFM32\soc-empty\protocol\bluetooth\ble_stack\inc\common/bg_types.h:
 
@@ -210,4 +210,6 @@ C:\work\EFM32\soc-empty\hardware\kit\common\halconfig/retargetserialhalconfig.h:
 
 ../hid.h:
 
-../key_input.h:
+../user_pheri.h:
+
+../user_code.h:

@@ -8,8 +8,8 @@
 #include "em_usart.h"
 #include "user_pheri.h"
 #include "gpiointerrupt.h"
-#include "key_input.h"
-uint8_t gKeyValue = KEYBOARD_NONE;
+#include "user_code.h"
+keycode_t gKeyValue = KEYBOARD_NONE;
 #if 0
 int _write(int file, char *ptr, int len)
 {
