@@ -113,9 +113,9 @@ int main(void)
 	RETARGET_SerialCrLf(true);
 	/* Initialize application */
 	initApp();
-
-	/* Start application */
 	init_pb();
+	/* Start application */
+
 	appMain(&config);
 }
 

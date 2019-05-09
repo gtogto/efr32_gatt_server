@@ -18,6 +18,7 @@ C_DEPS :=
 SUBDIRS := \
 app/bluetooth/common/util \
 . \
+driver \
 hardware/kit/common/bsp \
 hardware/kit/common/drivers \
 platform/Device/SiliconLabs/BGM1/Source/GCC \

@@ -20,6 +20,37 @@ typedef enum {
 	KEYBOARD_UP		= 0x52,
 }keycode_t;
 
+enum GESTURES	{
+	RIGHT,
+	LEFT,
+	FRONT,
+	BACK,
+	UP,
+	DOWN,
+	CLOCK,
+	ANTI_CLOCK,
+	LOW_CLOCK,
+	LOW_ANTI,
+	SIDE_CLOCK,
+	SIDE_ANTI,
+	FRONT_R,
+	FRONT_L,
+	BACK_R,
+	BACK_L,
+	RIGHT_F,
+	RIGHT_B,
+	LEFT_F,
+	LEFT_B,
+	NONE,
+	SIDE,
+};
+
+#define SENSOR_VALUE_COUNTER	20	//# per 1 sec
+#define SAMPLING_DELAY			5	//ms
+#define AXIS_NUM				6
+#define BACKUP_SAMPLE 5
+#define SAMPLE_NUM SENSOR_VALUE_COUNTER
+
 typedef enum {
 	TIMER_TICK		= 0,
 	TIMER_SENSOR	= 1,

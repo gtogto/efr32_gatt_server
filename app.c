@@ -34,6 +34,7 @@ uint8_t key_buffer[8] = { 0, };
 uint8 ble_buffer[20];
 uint16_t hid_attribute = gattdb_hid_keyboard_in;
 
+
 /* Print boot message */
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
 
@@ -43,6 +44,7 @@ static uint8_t boot_to_dfu = 0;
 /* Main application */
 void appMain(gecko_configuration_t *pconfig)
 {
+	int temp = 0;
 #if DISABLE_SLEEP > 0
 	pconfig->sleep.flags = 0;
 #endif
@@ -55,6 +57,8 @@ void appMain(gecko_configuration_t *pconfig)
 
 	while (1) {
 		struct gecko_cmd_packet* evt;
+		uint8_t keyVal = KEYBOARD_NONE;
+
 
 		/* if there are no events pending then the next call to gecko_wait_event() may cause
 		 * device go to deep sleep. Make sure that debug prints are flushed before going to sleep */
@@ -104,7 +108,7 @@ void appMain(gecko_configuration_t *pconfig)
 			activeConnectionId = evt->data.evt_le_connection_opened.connection;
 			/* Set Timers */
 			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(20), TIMER_SENSOR, 0);
-			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(500), TIMER_KEY_INPUT, 0);
+			gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(1000), TIMER_KEY_INPUT, 0);
 			break;
 
 
@@ -117,9 +121,9 @@ void appMain(gecko_configuration_t *pconfig)
 				/* Enter to OTA DFU mode */
 				gecko_cmd_system_reset(2);
 			} else {
-				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(10), TIMER_TICK, 0);
-				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(20), TIMER_SENSOR, 0);
-				gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(500), TIMER_KEY_INPUT, 0);
+				//gecko_cmd_hardware_set_soft_timer(TIMER_TICK_TO_MS(10), TIMER_TICK, 0);
+				gecko_cmd_hardware_set_soft_timer(0, TIMER_SENSOR, 0);
+				gecko_cmd_hardware_set_soft_timer(0, TIMER_KEY_INPUT, 0);
 				activeConnectionId = 0xFF; /* delete the connection ID */
 			}
 			break;
@@ -256,33 +260,49 @@ void appMain(gecko_configuration_t *pconfig)
 			switch (evt->data.evt_hardware_soft_timer.handle) {
 			case TIMER_KEY_INPUT:
 				printf("KeyInput\n");
+				if(temp) {
+					keyVal = KEYBOARD_LEFT;
+					temp = 0;
+				}
+				else {
+					keyVal = KEYBOARD_RIGHT;
+					temp = 1;
+				}
+				key_buffer[2] = keyVal;
+				gecko_cmd_gatt_server_send_characteristic_notification(
+						activeConnectionId, hid_attribute, 8, key_buffer);
+				/* Key Release Event */
+				key_buffer[2] = KEYBOARD_NONE;
+				gecko_cmd_gatt_server_send_characteristic_notification(
+						activeConnectionId, hid_attribute, 8, key_buffer);
 				break;
 
-			case TIMER_SENSOR :
+			case TIMER_SENSOR:
 				GPIO_PinOutToggle(UIF_LED0_PORT, UIF_LED0_PIN);
 				break;
 
-			case TIMER_TICK :
+			case TIMER_TICK:
 				GPIO_PinOutToggle(UIF_LED1_PORT, UIF_LED1_PIN);
-				break;
+				//break;
 #if 0
-			uint8_t keyVal = KEYBOARD_NONE;
-			keyVal = get_key_value();
-			if (keyVal != KEYBOARD_NONE) {
-				key_buffer[2] = keyVal;
-				pRsp = gecko_cmd_gatt_server_send_characteristic_notification(
-						hid_connection, hid_attribute, 8, key_buffer);
-				/* Key Release Event */
-				key_buffer[2] = KEYBOARD_NONE;
-				pRsp = gecko_cmd_gatt_server_send_characteristic_notification(
-						hid_connection, hid_attribute, 8, key_buffer);
-				printLog(
-						"gatt_server_send_characteristic_notification, result = %04x, keyValue=%02x\n",
-						pRsp->result, keyVal);
-			}
+				keyVal = get_key_value();
+				if (keyVal != KEYBOARD_NONE) {
+					key_buffer[2] = keyVal;
+					gecko_cmd_gatt_server_send_characteristic_notification(
+							activeConnectionId, hid_attribute, 8, key_buffer);
+					/* Key Release Event */
+					key_buffer[2] = KEYBOARD_NONE;
+					gecko_cmd_gatt_server_send_characteristic_notification(
+							activeConnectionId, hid_attribute, 8, key_buffer);
+					printLog(
+							"gatt_server_send_characteristic_notification, result = %04x, keyValue=%02x\n",
+							evt->data.rsp_gatt_server_send_characteristic_notification.result,
+							keyVal);
+
+				}
 #endif
+				break;
 			}
-			break;
 
 		default:
 			break;
