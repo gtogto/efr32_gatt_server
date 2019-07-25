@@ -55,6 +55,8 @@ typedef enum {
 	TIMER_TICK		= 0,
 	TIMER_SENSOR	= 1,
 	TIMER_KEY_INPUT	= 2,
+	TIMER_KEY_UART	= 3,
+	TIMER_BLE		= 4,
 }timer_id_t;
 
 /** HID report mode. */

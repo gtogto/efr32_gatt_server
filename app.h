@@ -28,6 +28,9 @@
 #if DEBUG_LEVEL
 #include "retargetserial.h"
 #include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
 #endif
 
 #if DEBUG_LEVEL

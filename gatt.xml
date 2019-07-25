@@ -61,8 +61,8 @@
     <!--Silicon Labs OTA Control-->
     <characteristic id="ota_control" name="Silicon Labs OTA Control" sourceId="com.silabs.characteristic.ota_control" uuid="F7BF3564-FB6D-4E53-88A4-5E37E0326063">
       <informativeText>Abstract: Silicon Labs OTA Control. </informativeText>
-      <value length="1" type="user" variable_length="false"/>
-      <properties write="true" write_requirement="optional"/>
+      <value length="21" type="user" variable_length="false"/>
+      <properties notify="true" notify_requirement="optional" write="true" write_requirement="mandatory"/>
     </characteristic>
   </service>
   
@@ -162,6 +162,44 @@
       <informativeText>Summary:  The HID Control Point characteristic is a control-point attribute that defines the following HID Commands when written:             - Suspend ( Refer to Section 7.4.2, Bluetooth HID Profile Specification 1.0             - Exit Suspend (Refer to Section 7.4.2, Bluetooth HID Profile Specification 1.0  </informativeText>
       <value length="1" type="hex" variable_length="false"/>
       <properties write_no_response="true" write_no_response_requirement="mandatory"/>
+    </characteristic>
+  </service>
+  
+  <!--SPP Service-->
+  <service advertise="false" id="spp_service" name="SPP Service" requirement="mandatory" sourceId="custom.type" type="primary" uuid="f1d8fa54-b63c-4718-91be-219622153674">
+    <informativeText>Custom service</informativeText>
+    
+    <!--SPP_data-->
+    <characteristic id="gatt_spp_data" name="SPP_data" sourceId="custom.type" uuid="8d20cb45-20fc-4d4e-bd3b-16a0be0e16f6">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="20" type="hex" variable_length="true">0x65</value>
+      <properties notify="true" notify_requirement="optional" read="true" read_requirement="optional" write_no_response="true" write_no_response_requirement="optional"/>
+    </characteristic>
+    
+    <!--send_data-->
+    <characteristic id="ble_send_data" name="send_data" sourceId="org.bluetooth.service.user_data" uuid="7d2ebcfa-4e91-45bf-aac4-2c877bbcdde7">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="21" type="hex" variable_length="true">0x65</value>
+      <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
+    </characteristic>
+  </service>
+  
+  <!--DemoService-->
+  <service advertise="false" name="DemoService" requirement="mandatory" sourceId="custom.type" type="primary" uuid="1b72634b-ab7b-4f99-8086-ba0124f4681f">
+    <informativeText>Custom service</informativeText>
+    
+    <!--TX-->
+    <characteristic id="hex_type" name="TX" sourceId="custom.type" uuid="326d606d-fe02-4f6d-bf6a-17395639c549">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="20" type="user" variable_length="false"/>
+      <properties notify="true" notify_requirement="optional"/>
+    </characteristic>
+    
+    <!--RX-->
+    <characteristic id="rx" name="RX" sourceId="custom.type" uuid="13125d01-fd8b-41f2-b0fe-746fddc2feb0">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="20" type="utf-8" variable_length="false">0x00</value>
+      <properties notify="true" notify_requirement="optional"/>
     </characteristic>
   </service>
 </gatt>

@@ -19,13 +19,17 @@ extern const struct bg_gattdb_def bg_gattdb_data;
 #define gattdb_device_name                     11
 #define gattdb_pnp_id                          20
 #define gattdb_ota_control                     25
-#define gattdb_battery_level                   28
-#define gattdb_hid_protocol_mode               32
-#define gattdb_hid_keyboard_in                 34
-#define gattdb_hid_keyboard_out                38
-#define gattdb_hid_keyboard_feature            41
-#define gattdb_hid_boot_keyboard_in            46
-#define gattdb_hid_boot_keyboard_out           49
-#define gattdb_hid_control_point               53
+#define gattdb_battery_level                   29
+#define gattdb_hid_protocol_mode               33
+#define gattdb_hid_keyboard_in                 35
+#define gattdb_hid_keyboard_out                39
+#define gattdb_hid_keyboard_feature            42
+#define gattdb_hid_boot_keyboard_in            47
+#define gattdb_hid_boot_keyboard_out           50
+#define gattdb_hid_control_point               54
+#define gattdb_gatt_spp_data                   57
+#define gattdb_ble_send_data                   60
+#define gattdb_hex_type                        63
+#define gattdb_rx                              66
 
 #endif
